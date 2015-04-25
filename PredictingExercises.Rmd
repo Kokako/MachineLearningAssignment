@@ -1,0 +1,74 @@
+---
+title: "Predicting Weight Exercise Performance"
+output: html_document
+---
+
+First we load the data:
+
+```{r}
+library(caret)
+library(randomForest)
+data <- read.csv("pml-training.csv", header=TRUE)
+```
+
+This dataset contains 160 variables, but upon inspection we find that the fields that were calculated on the Euler angles-- mean, variance, standard deviation, max, min, amplitude, kurtosis and skewness-- are summaries over the time series of the activity (see [paper](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf)). Since we must predict the activity from one observation/row only, not a time series, we can remove these summary columns from the dataset.
+
+```{r}
+data <- data[,-grep("^avg_", names(data))] 
+data <- data[,-grep("^var_", names(data))] 
+data <- data[,-grep("^stddev_", names(data))] 
+data <- data[,-grep("^max_", names(data))] 
+data <- data[,-grep("^min_", names(data))] 
+data <- data[,-grep("^amplitude_", names(data))] 
+data <- data[,-grep("^kurtosis_", names(data))] 
+data <- data[,-grep("^skewness_", names(data))] 
+```
+
+We also know that the first seven variables, which contain information about the user and the time series, will not be useful for our prediction algorithm, so we exclude them as well.
+
+```{r}
+data <- data[,-c(1:7)]
+```
+
+As this is a classification problem, we will examine trees and random forests. The first method we'll look at is a classification and regression tree (CART), with cross-validation as the training method:
+
+```{r,cache=TRUE}
+set.seed(54321)
+modFitRPart <- train(classe~., method="rpart", data=data, trControl=trainControl(method="cv"))
+print(modFitRPart)
+```
+
+The maximum accuracy from the cross-validation tests is only 50.6%, which is not very good. As the average accuracy across all cross-validation tests is an estimation of the model's out-of-sample accuracy, we want to find a more accurate model to use for the testing sample predictions. Thus, we turn to a random forest model:
+
+```{r}
+## Split data set into the predictors and the outcome
+predictors <- data[,-ncol(data)]
+outcome <- data$classe
+
+## Construct RF model
+set.seed(12345)
+modFitRForest <- randomForest(x=predictors, y=outcome)
+print(modFitRForest)
+```
+
+Random forests, by default, use a type of cross-validation to build the models: a third of the data, called out-of-bag data, is excluded from the training set for each tree and used to test the classification. This process is repeated many times in the construction of the entire random forest which produces an overall out-of-bag error estimate (see [article on random forests](http://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#ooberr)). Like in cross-validation, this OOB error estimates the out of sample error, so we can compare it to that of the tree model. For this random forest model, the OOB estimate of the error rate is 0.29%, which means that the accuracy is 99.71%. This accuracy is much better than that of the tree, so we will use this random forest model on the test set.
+
+```{r}
+## Testing data
+testing <- read.csv("pml-testing.csv", header=TRUE)
+testing <- testing[,-grep("^avg_", names(testing))] 
+testing <- testing[,-grep("^var_", names(testing))] 
+testing <- testing[,-grep("^stddev_", names(testing))] 
+testing <- testing[,-grep("^max_", names(testing))] 
+testing <- testing[,-grep("^min_", names(testing))] 
+testing <- testing[,-grep("^amplitude_", names(testing))] 
+testing <- testing[,-grep("^kurtosis_", names(testing))] 
+testing <- testing[,-grep("^skewness_", names(testing))] 
+testing <- testing[,-c(1:7)]
+
+pred <- predict(modFitRForest, testing)
+predictionVector <- as.character(pred)
+```
+
+We submitted these predictions and got 100% correct.
+
