@@ -2,6 +2,7 @@
 title: "Predicting Weight Exercise Performance"
 output: html_document
 ---
+The goal of this report is to predict the manner in which participants completed a bicep curl. The participants were monitored with several sensors while they completed the exercise correctly (class A) and incorrectly in five different ways (classes B through E). Based on the sensor data, we want to be able to predict whether the wearer did the exercise correctly or, if incorrectly, what their mistake in technique was.
 
 First we load the data:
 
@@ -70,5 +71,5 @@ pred <- predict(modFitRForest, testing)
 predictionVector <- as.character(pred)
 ```
 
-We submitted these predictions and got 100% correct.
+We submitted these predictions and got 100% correct, which is very close to the estimated error of 99.71% that we expected with this model.
 

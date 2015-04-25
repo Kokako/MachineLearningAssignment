@@ -64,6 +64,7 @@ img {
 </div>
 
 
+<p>The goal of this report is to predict the manner in which participants completed a bicep curl. The participants were monitored with several sensors while they completed the exercise correctly (class A) and incorrectly in five different ways (classes B through E). Based on the sensor data, we want to be able to predict whether the wearer did the exercise correctly or, if incorrectly, what their mistake in technique was.</p>
 <p>First we load the data:</p>
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
@@ -147,7 +148,7 @@ testing &lt;- testing[,-c(1:7)]
 
 pred &lt;- predict(modFitRForest, testing)
 predictionVector &lt;- as.character(pred)</code></pre>
-<p>We submitted these predictions and got 100% correct.</p>
+<p>We submitted these predictions and got 100% correct, which is very close to the estimated error of 99.71% that we expected with this model.</p>
 
 
 </div>
